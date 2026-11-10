@@ -1,0 +1,51 @@
+services:
+  open-webui:
+    networks:
+      - default
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      - "traefik.http.routers.ods.rule=Host(`ods.wal.alpesdigital.com`)"
+      - "traefik.http.routers.ods.entrypoints=websecure"
+      - "traefik.http.routers.ods.tls=true"
+
+      - "traefik.http.services.ods.loadbalancer.server.port=8080"
+
+  dashboard:
+    networks:
+      - default
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      - "traefik.http.routers.ods-dashboard.rule=Host(`ods-dashboard.wal.alpesdigital.com`)"
+      - "traefik.http.routers.ods-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.ods-dashboard.tls=true"
+
+      - "traefik.http.services.ods-dashboard.loadbalancer.server.port=3001"
+
+  opencode-proxy:
+    image: alpine/socat:1.8.1.3
+    container_name: ods-opencode-proxy
+    network_mode: host
+    restart: unless-stopped
+
+    command:
+      - "TCP-LISTEN:13003,fork,reuseaddr"
+      - "TCP:127.0.0.1:3003"
+
+    labels:
+      - "traefik.enable=true"
+
+      - "traefik.http.routers.opencode.rule=Host(`opencode.wal.alpesdigital.com`)"
+      - "traefik.http.routers.opencode.entrypoints=websecure"
+      - "traefik.http.routers.opencode.tls=true"
+
+      - "traefik.http.services.opencode.loadbalancer.server.port=13003"
+
+networks:
+  web:
+    external: true
